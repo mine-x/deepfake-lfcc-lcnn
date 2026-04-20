@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+
+# Model checkpoints are too large for GitHub (>100 MB per file).
+# Final weights are not committed; see PROJECT.md for training recipes.
+*.pt
+
+# Local-only workspaces
+_archive/
+sandbox/
+01_project/baseline_DF/_archived_scripts/
+
+# ASVspoof5 utterance-length caches (regenerable, ~100 MB)
+asvspoof5_*_utt_length.dic
+
+# Noise audio: sources described in noise_clips/README.md, clips not redistributed
+noise_clips/**/*.wav
+noise_clips/**/*.flac
+noise_clips/selected_archive/
+
+# Completed training runs — only ocsoftmax_v1 (logs) is kept
+03_completed_training/clean/
+03_completed_training/clean_weighted/
+03_completed_training/ffm_ocsoftmax_v1/
+03_completed_training/mixup_v1/
+03_completed_training/noise_aug/
+03_completed_training/noise_aug_v2/
+03_completed_training/noise_aug_v3/
+03_completed_training/noise_aug_v4/
+03_completed_training/noise_aug_v5/
+03_completed_training/ocsoftmax_v2/
+03_completed_training/ocsoftmax_v3/
+03_completed_training/se_ocsoftmax_v1/
+03_completed_training/weighted_v1/
+
+# Completed evals — only ocsoftmax_v1 + top-level analyses/xlsx are kept
+04_completed_evals/archive/
+04_completed_evals/clean/
+04_completed_evals/noise_aug_v5/
+
+# clean_weighted: keep saliency_maps + scores, drop heavy raw inference logs
+04_completed_evals/clean_weighted/inference_*.log
+
+# Raw per-run inference logs (~59 MB each; scores_*.txt capture the detection data)
+04_completed_evals/ocsoftmax_v1/inference_*.log
+
+# Per-step training log (~170 MB; epoch summary is captured in PROJECT.md)
+03_completed_training/ocsoftmax_v1/train_*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

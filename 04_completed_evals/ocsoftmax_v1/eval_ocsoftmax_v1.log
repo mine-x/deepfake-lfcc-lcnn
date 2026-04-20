@@ -1,0 +1,194 @@
+========================================
+Full augmented evaluation suite
+Model: ../../03_completed_training/ocsoftmax_v1/trained_network.pt
+Output: ../../04_completed_evals/ocsoftmax_v1
+Noise subdir: eval_train_combined
+========================================
+
+=== clean ===
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 38.0294 %
+EER Threshold: 0.909453
+===================================
+
+=== noise_ambient_20dB ===
+  Augment: noise_ambient_20dB
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 38.3011 %
+EER Threshold: 0.742795
+===================================
+
+=== noise_ambient_10dB ===
+  Augment: noise_ambient_10dB
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 40.9769 %
+EER Threshold: 0.623202
+===================================
+
+=== noise_babble_20dB ===
+  Augment: noise_babble_20dB
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 38.2325 %
+EER Threshold: 0.646389
+===================================
+
+=== noise_babble_10dB ===
+  Augment: noise_babble_10dB
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 41.3634 %
+EER Threshold: 0.694597
+===================================
+
+=== short_3s ===
+  Augment: short_3s
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 38.6963 %
+EER Threshold: 0.801253
+===================================
+
+=== short_5s ===
+  Augment: short_5s
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 37.9277 %
+EER Threshold: 0.846669
+===================================
+
+=== mp3_64kbps ===
+  Audio dir: /home/mina/asvspoof5_dataset/augmented/mp3_64kbps
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 37.8627 %
+EER Threshold: 0.885317
+===================================
+
+=== opus_32kbps ===
+  Audio dir: /home/mina/asvspoof5_dataset/augmented/opus_32kbps
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 38.3912 %
+EER Threshold: 0.894557
+===================================
+
+=== mp3_noise_babble_20dB ===
+  Audio dir: /home/mina/asvspoof5_dataset/augmented/mp3_64kbps
+  Augment: noise_babble_20dB
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 38.2872 %
+EER Threshold: 0.563124
+===================================
+
+=== noise_babble_20dB_short_3s ===
+  Augment: short_3s+noise_babble_20dB
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 39.4570 %
+EER Threshold: 0.306637
+===================================
+
+=== mp3_short_3s ===
+  Audio dir: /home/mina/asvspoof5_dataset/augmented/mp3_64kbps
+  Augment: short_3s
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 38.5304 %
+EER Threshold: 0.756963
+===================================
+
+========================================
+Running failure analysis...
+========================================
+Analysing clean baseline...
+  Clean EER: 38.03%  |  Reference threshold: 0.909453
+Found 12 augmented score files
+
+  Analysing clean...
+  Analysing mp3_64kbps...
+  Analysing mp3_noise_babble_20dB...
+  Analysing mp3_short_3s...
+  Analysing noise_ambient_10dB...
+  Analysing noise_ambient_20dB...
+  Analysing noise_babble_10dB...
+  Analysing noise_babble_20dB...
+  Analysing noise_babble_20dB_short_3s...
+  Analysing opus_32kbps...
+  Analysing short_3s...
+  Analysing short_5s...
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+Condition                    |     EER |    ΔEER |    FAR† |    FRR† | Failure Mode        | Bonafide Mean | Bonafide Std |  Spoof Mean |  Spoof Std
+----------------------------------------------------------------------------------------------------------------------------------------------------
+clean                        |  38.03% |       — |  38.03% |  38.03% | balanced            |        0.7863 |       0.3341 |      0.4107 |     0.5692
+clean                        |  38.03% |       — |  38.03% |  38.03% | balanced            |        0.7863 |       0.3341 |      0.4107 |     0.5692
+mp3_64kbps                   |  37.86% |   -0.17 |  36.13% |  41.05% | bonafide collapse   |        0.7589 |       0.3581 |      0.3771 |     0.5782
+mp3_noise_babble_20dB        |  38.29% |   +0.26 |  26.98% |  58.17% | bonafide collapse   |        0.5964 |       0.4388 |      0.2789 |     0.5553
+mp3_short_3s                 |  38.53% |   +0.50 |  32.20% |  48.89% | bonafide collapse   |        0.6330 |       0.4743 |      0.2696 |     0.6226
+noise_ambient_10dB           |  40.98% |   +2.95 |  29.20% |  57.64% | bonafide collapse   |        0.6074 |       0.4248 |      0.3658 |     0.5261
+noise_ambient_20dB           |  38.30% |   +0.27 |  31.20% |  50.84% | bonafide collapse   |        0.6647 |       0.4136 |      0.3315 |     0.5624
+noise_babble_10dB            |  41.36% |   +3.33 |  29.60% |  56.97% | bonafide collapse   |        0.6478 |       0.3847 |      0.4431 |     0.4753
+noise_babble_20dB            |  38.23% |   +0.20 |  28.37% |  55.41% | bonafide collapse   |        0.6312 |       0.4202 |      0.3110 |     0.5493
+noise_babble_20dB_short_3s   |  39.46% |   +1.43 |  24.83% |  62.11% | bonafide collapse   |        0.4634 |       0.5364 |      0.1708 |     0.5982
+opus_32kbps                  |  38.39% |   +0.36 |  37.26% |  40.51% | bonafide collapse   |        0.7654 |       0.3519 |      0.3968 |     0.5721
+short_3s                     |  38.70% |   +0.67 |  33.66% |  46.80% | bonafide collapse   |        0.6554 |       0.4621 |      0.2925 |     0.6215
+short_5s                     |  37.93% |   -0.10 |  34.49% |  44.42% | bonafide collapse   |        0.6990 |       0.4289 |      0.3035 |     0.6189
+----------------------------------------------------------------------------------------------------------------------------------------------------
+† FAR/FRR computed at clean baseline EER threshold (fixed reference)
+
+Results saved to ../../04_completed_evals/ocsoftmax_v1/robustness_summary.csv
+
+Done. All results in ../../04_completed_evals/ocsoftmax_v1/

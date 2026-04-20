@@ -1,0 +1,45 @@
+nohup: ignoring input
+=== noise_ambient_20dB ===
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 44.1120 %
+EER Threshold: 1.712244
+===================================
+
+=== noise_ambient_10dB ===
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 47.9818 %
+EER Threshold: 2.378865
+===================================
+
+=== noise_babble_20dB ===
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 43.2092 %
+EER Threshold: 2.884592
+===================================
+
+=== noise_babble_10dB ===
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 46.5987 %
+EER Threshold: 4.248304
+===================================
+

@@ -1,0 +1,22 @@
+nohup: ignoring input
+=== mp3_noise_babble_20dB ===
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 43.5252 %
+EER Threshold: 2.637810
+===================================
+
+=== noise_babble_20dB_short_3s ===
+  Scores: 680774
+===================================
+Trials evaluated: 680774
+Bonafide trials: 138688
+Spoof trials: 542086
+-----------------------------------
+EER: 43.3910 %
+EER Threshold: 1.723773
+===================================
