@@ -1,14 +1,35 @@
 # Enhancement Iterations
 
-## Version Summary
+## Overview
 
-- **v1** — 4 simple noise clips (2 MUSAN + 2 Librivox babble), LR 0.0003. Best at epoch 1. Clean EER **35.75%**. Best overall but Librivox babble not representative of real-world noise.
-- **v2** — 6 realistic noise clips (3 MUSAN + 3 Freesound babble), LR 0.0003. Best at epoch 0. Clean EER 39.16%. Realistic noise caused immediate overfitting.
-- **v3** — Same clips as v2, lower LR (0.0001) + L2 regularization. Best at epoch 0. Clean EER **38.62%**. Fixed clean regression but still overfit at epoch 0.
-- **v4** — Added warmup, curriculum, label smoothing + augment_prob 0.7, SNR 5-30dB. Best at epoch 2. Clean EER 41.05%. Trained longer but too conservative — weaker features.
-- **v5** — v2 settings + warmup only (LR 0.0003, no L2). Best at epoch 0. Clean EER **37.99%**. Best model with realistic noise clips — warmup improved epoch 0 quality.
+The enhancement pipeline was developed in two stages:
 
-## EER Comparison (all versions)
+1. **Noise-augmented training iterations (v1–v5)** — explored training configurations to address the baseline's spoof collapse under noise. v5 was adopted as the noise-augmented baseline.
+2. **Strategy tests on top of v5** — evaluated additional enhancement strategies. OC-Softmax was adopted as the final enhancement; weighted loss and mixup were abandoned. Post-adoption experiments with SE attention blocks and frequency feature masking (FFM) did not yield further gains.
+
+**Final enhanced model:** v5 noise-augmented training + OC-Softmax loss. Clean EER 38.03%, improved 9 of 12 evaluation conditions relative to v5 alone.
+
+Score calibration (listed as one of five enhancement strategies in the report) was evaluated as a post-processing step on v5 outputs and produced only ~0.1 pp improvement, so it is not covered in detail in this document.
+
+## Summary of All Iterations
+
+| Iteration | Configuration | Best Epoch | Clean EER | Status |
+|-----------|---------------|------------|-----------|--------|
+| Baseline | LFCC-LCNN, 2019 pre-trained weights fine-tuned on ASVspoof5 | 0 | 38.72% | reference |
+| v1 | 4 simple noise clips (2 MUSAN + 2 Librivox babble), LR 0.0003 | 1 | **35.75%** | noise-aug exploration |
+| v2 | 6 realistic noise clips (3 MUSAN + 3 Freesound babble), LR 0.0003 | 0 | 39.16% | noise-aug exploration |
+| v3 | v2 clips + lower LR (0.0001) + L2 regularization | 0 | 38.62% | noise-aug exploration |
+| v4 | Warmup + curriculum + label smoothing + SNR 5–30dB | 2 | 41.05% | noise-aug exploration |
+| v5 | v2 settings + warmup only | 0 | **37.99%** | **adopted (noise-aug)** |
+| Weighted loss | pos_weight=2.0 on top of v5 | 0 | 39.75% | abandoned |
+| Mixup | α=0.2 on top of v5 | 0 | 40.91% | abandoned |
+| OC-Softmax (from 2019 weights) | v5 + OC-Softmax loss, r_fake=0.2 | 4 | **38.03%** | **adopted (final)** |
+| OC-Softmax (from v5 backbone) | Alternative starting point | 0 | 40.12% | abandoned |
+| OC-Softmax (r_fake=0.5) | Tighter spoof margin | 3 | 39.62% | abandoned |
+| SE attention + OC-Softmax | Stacked on top of adopted OC-Softmax | 1 | 39.21% | abandoned |
+| FFM + OC-Softmax | Stacked on top of adopted OC-Softmax | 1 | 38.45% | abandoned |
+
+## EER Comparison Across Noise-Augmented Iterations (v1–v5)
 
 | Condition | Baseline | v1* | v2 | v3 | v4 | v5 |
 |-----------|---------|-----|-----|-----|-----|-----|
@@ -29,7 +50,9 @@
 
 ---
 
-## v1
+# Part 1: Noise-Augmented Training Iterations (v1–v5)
+
+## v1 — 4 simple noise clips
 
 4 noise clips (2 MUSAN ambient + 2 Librivox 2-voice babble). Best overall results, but Librivox babble not representative of real-world noise.
 
@@ -78,9 +101,7 @@ FAR/FRR at clean EER threshold (-1.6781). Baseline showed spoof collapse under a
 
 4 training clips generalized well (0.2–1.8pp degradation on unseen noise).
 
----
-
-## v2
+## v2 — Switch to realistic noise (immediate overfitting)
 
 Switched to realistic Freesound babble clips. Overfit at epoch 0 — realistic noise caused destructive weight updates at LR 0.0003.
 
@@ -107,9 +128,7 @@ Clean regressed +0.44pp. Noise improved 3–4pp but less than v1. Short/codec re
 
 **Why v3:** Lower LR + L2 to slow convergence.
 
----
-
-## v3
+## v3 — Lower LR + L2 (partial fix)
 
 Lower LR and L2 fixed clean regression but still overfit at epoch 0.
 
@@ -136,9 +155,7 @@ Clean EER 38.62% (-0.10pp vs baseline). Noise 3–4pp improvement. Short/codec r
 
 **Why v4:** Still overfits at epoch 0. Tried increasing augmentation diversity.
 
----
-
-## v4
+## v4 — Warmup + curriculum + label smoothing (too conservative)
 
 Added warmup, curriculum, label smoothing. Trained to epoch 2 (first time past epoch 0), but EER regressed — techniques were too conservative.
 
@@ -169,9 +186,7 @@ Clean regressed +2.33pp. Noise improvement only 1–2pp (vs 3–4pp for v3). Lab
 
 **Why v5:** Label smoothing and curriculum hurt. Tested v2 settings + warmup only.
 
----
-
-## v5
+## v5 — v2 settings + warmup only (adopted)
 
 v2 settings + warmup only. Best model with realistic noise clips. Warmup smoothed epoch 0's early batches, producing a better local minimum.
 
@@ -211,11 +226,15 @@ Epoch 0 dev loss better than v2 (0.9357 vs 0.9455). Still overfit at epoch 1, bu
 
 FAR/FRR at clean EER threshold (-2.3163).
 
-**Conclusion:** Warmup was the key missing ingredient for v2. The model still only trains for one useful epoch, but that epoch produces significantly better features than without warmup. Clean EER improved 0.73pp over baseline, noise improved 4.6–6.5pp.
+**Conclusion:** Warmup was the key missing ingredient for v2. The model still only trains for one useful epoch, but that epoch produces significantly better features than without warmup. Clean EER improved 0.73pp over baseline, noise improved 4.6–6.5pp. v5 adopted as the noise-augmented baseline for subsequent strategy tests.
 
 ---
 
-## Priority 2: Weighted Loss (pos_weight=2.0)
+# Part 2: Strategy Tests on Top of v5
+
+The strategies below were tested on the v5 noise-augmented model to evaluate further gains. OC-Softmax was adopted as the final enhancement; the others were abandoned.
+
+## Weighted Loss (abandoned)
 
 Tested weighted BCELoss on top of v5 settings to address 1:8.7 bonafide:spoof class imbalance. Bonafide samples weighted 2x higher in loss computation. Result: worse than v5 across all conditions.
 
@@ -249,11 +268,9 @@ Tested weighted BCELoss on top of v5 settings to address 1:8.7 bonafide:spoof cl
 | MP3 64kbps | **37.95%** | 39.64% | +1.69pp |
 | Opus 32kbps | **38.26%** | 39.79% | +1.53pp |
 
-**Conclusion:** Weighted loss is counterproductive on top of noise augmentation. v5 already reversed the baseline's spoof collapse to bonafide collapse — upweighting bonafide loss further amplified this imbalance, worsening EER by 1.2–3.6pp across all conditions. The class imbalance in training data (1:8.7) is already effectively addressed by noise augmentation's regularization effect. Priority 2 abandoned; moving to Priority 3 (score calibration).
+**Conclusion:** Weighted loss is counterproductive on top of noise augmentation. v5 already reversed the baseline's spoof collapse to bonafide collapse — upweighting bonafide loss further amplified this imbalance, worsening EER by 1.2–3.6pp across all conditions. The class imbalance in training data (1:8.7) is already effectively addressed by noise augmentation's regularization effect. Moved to mixup test next.
 
----
-
-## Priority 4: Mixup Augmentation (α=0.2) — Worse
+## Mixup Augmentation (abandoned)
 
 Tested LFCC-level mixup on top of v5 noise-augmented settings. Mixup blends pairs of training samples and labels (`x_mix = λ*x1 + (1-λ)*x2`, `y_mix = λ*y1 + (1-λ)*y2`) to regularize against overfitting. Applied at the LFCC spectrogram level before the LCNN conv layers.
 
@@ -294,17 +311,17 @@ Dev loss significantly lower than v5 (0.7113 vs 0.9357) but did not translate to
 | Babble 20dB+short 3s | **39.75%** | 41.81% | +2.06pp |
 | MP3+short 3s | **38.68%** | 41.10% | +2.42pp |
 
-**Conclusion:** Mixup at α=0.2 on LFCC features is consistently worse than v5 by 2–3pp across all conditions. Blending LFCC spectrograms creates unrealistic inputs — a blended bonafide+spoof spectrogram doesn't represent "partially fake" audio, it's an artifact that doesn't exist in nature. The model learns to handle these artificial blends at the expense of real-world discrimination. Lower dev loss (0.71 vs 0.94) reflects better fit to the mixup training objective, not better spoofing detection. STC's success with mixup ([Tomilov et al., 2021](https://www.isca-archive.org/asvspoof_2021/tomilov21_asvspoof.pdf)) may have used waveform-level mixup or different architecture/feature combinations. Priority 4 abandoned; moving to Priority 5 (OC-Softmax).
+**Conclusion:** Mixup at α=0.2 on LFCC features is consistently worse than v5 by 2–3pp across all conditions. Blending LFCC spectrograms creates unrealistic inputs — a blended bonafide+spoof spectrogram doesn't represent "partially fake" audio, it's an artifact that doesn't exist in nature. The model learns to handle these artificial blends at the expense of real-world discrimination. Lower dev loss (0.71 vs 0.94) reflects better fit to the mixup training objective, not better spoofing detection. STC's success with mixup ([Tomilov et al., 2021](https://www.isca-archive.org/asvspoof_2021/tomilov21_asvspoof.pdf)) may have used waveform-level mixup or different architecture/feature combinations. Moved to OC-Softmax test next.
 
----
-
-## Priority 5: OC-Softmax Loss
+## OC-Softmax Loss (adopted, final enhancement)
 
 Replaced BCELoss with OC-Softmax ([Zhang et al., IEEE SPL 2021](https://arxiv.org/pdf/2010.13995)), which learns a compact bonafide boundary in embedding space with angular margins. Instead of "is this bonafide or spoof?" (BCE), the model learns "does this match bonafide?" — novel attacks fail because they don't match bonafide, not because they match known spoof.
 
 Architecture change: output layer from `Linear(dim, 1)` → `Linear(dim, 64)`, no sigmoid. OCSoftmax module L2-normalizes embeddings and a learnable center, computes cosine similarity, and applies angular margins (`r_real`, `r_fake`) with a scaling factor (`alpha`).
 
-### v1: From 2019 pre-trained weights
+Three variants were tested. OC-Softmax v1 (from 2019 weights, r_fake=0.2) was adopted as the final model.
+
+### OC-Softmax v1 — from 2019 pre-trained weights (adopted)
 
 | Setting | Value | Change from v5 |
 |---------|-------|----------------|
@@ -333,7 +350,7 @@ Architecture change: output layer from `Linear(dim, 1)` → `Linear(dim, 64)`, n
 
 First model to improve past epoch 0. Dev loss not directly comparable to BCE (different loss scale; OC-Softmax uses alpha=20 multiplier).
 
-### v1 EER Comparison
+#### EER Comparison
 
 | Condition | v5 EER | OC-Soft v1 EER | Delta |
 |-----------|--------|---------------|-------|
@@ -352,7 +369,7 @@ First model to improve past epoch 0. Dev loss not directly comparable to BCE (di
 
 **Improved 9 of 12 conditions.** Best gains on moderate noise (ambient 10dB: -1.14pp, ambient 20dB: -1.00pp). Only babble 10dB regressed (+1.26pp) — the extreme case where speech and noise are nearly equal power. Clean essentially unchanged.
 
-### v2: From v5 backbone
+### OC-Softmax v2 — from v5 backbone (abandoned)
 
 Tested whether starting from v5's ASVspoof5-adapted backbone would give a better starting point than the generic 2019 weights.
 
@@ -386,11 +403,7 @@ Tested whether starting from v5's ASVspoof5-adapted backbone would give a better
 
 **Worse than both v5 and v1 across all conditions.** The v5 backbone features are optimized for BCE's scalar output. Forcing them through a 64-dim angular margin space with only one useful epoch doesn't work. The 2019 backbone is more general and gave OC-Softmax room to reshape features over 5 epochs.
 
-**Conclusion:** OC-Softmax v1 (from 2019 weights) is the best model. The loss function change enabled multi-epoch training for the first time and improved 9 of 12 conditions. Starting from a task-adapted backbone (v2) is counterproductive — OC-Softmax benefits from a more general starting point.
-
----
-
-### v3: Tighter spoof margin (r_fake=0.5)
+### OC-Softmax v3 — tighter spoof margin, r_fake=0.5 (abandoned)
 
 Tested tighter spoof margin to address v1's babble 10dB regression. Hypothesis: r_fake=0.2 is too lenient — spoof samples under heavy noise land close to the bonafide center without sufficient penalty.
 
@@ -411,7 +424,7 @@ Tested tighter spoof margin to address v1's babble 10dB regression. Hypothesis: 
 | 5 | 0.0519 | 2.7674 | No |
 | 6 | 0.0438 | 2.8262 | No |
 
-### v3 EER Comparison (partial — eval stopped early, pattern clear)
+#### EER Comparison (partial — eval stopped early, pattern clear)
 
 | Condition | v5 EER | OC-Soft v1 EER | OC-Soft v3 EER | Δ v3 vs v1 |
 |-----------|--------|---------------|---------------|------------|
@@ -426,13 +439,11 @@ Tested tighter spoof margin to address v1's babble 10dB regression. Hypothesis: 
 
 **Worse than both v5 and v1 across all conditions (~1.5pp worse than v1).** The tighter margin did not fix babble 10dB (43.15% vs 41.36%) — it made it worse. r_fake=0.5 is too restrictive: it over-constrains the embedding space, pushing the model to create excessively tight boundaries that don't generalize. The lower dev loss (2.40 vs 3.72 for v1) reflects a more constrained optimization, not better detection.
 
-**Conclusion:** r_fake=0.2 (v1) is the correct margin for this architecture. OC-Softmax v1 remains the best model overall.
+**OC-Softmax conclusion:** v1 (from 2019 weights, r_fake=0.2) is the adopted final model. The loss function change enabled multi-epoch training for the first time and improved 9 of 12 conditions. Starting from a task-adapted backbone (v2) is counterproductive — OC-Softmax benefits from a more general starting point. Tightening the spoof margin (v3) over-constrains the embedding space.
 
----
+## SE Attention Blocks + OC-Softmax (abandoned, experimental add-on)
 
-## Priority 7: SE Attention Blocks + OC-Softmax — Worse
-
-Added Squeeze-and-Excitation (SE) channel attention blocks ([Hu et al., CVPR 2018](https://arxiv.org/abs/1709.01507)) to the LCNN, inserted after each MaxPool layer (4 blocks at 32, 48, 64, 32 channels). SE blocks learn per-channel importance via global average pooling → FC → ReLU → FC → Sigmoid. Combined with OC-Softmax + noise augmentation (all three enhancements stacked). Motivated by Ma & Liang (ICASSP 2021) who achieved 42% relative EER reduction on ASVspoof 2019 with attention-enhanced LCNN.
+Tested stacking SE attention on top of the adopted OC-Softmax v1 configuration. Added Squeeze-and-Excitation (SE) channel attention blocks ([Hu et al., CVPR 2018](https://arxiv.org/abs/1709.01507)) to the LCNN, inserted after each MaxPool layer (4 blocks at 32, 48, 64, 32 channels). SE blocks learn per-channel importance via global average pooling → FC → ReLU → FC → Sigmoid. Motivated by Ma & Liang (ICASSP 2021) who achieved 42% relative EER reduction on ASVspoof 2019 with attention-enhanced LCNN.
 
 ### Training
 
@@ -470,13 +481,11 @@ Added Squeeze-and-Excitation (SE) channel attention blocks ([Hu et al., CVPR 201
 
 **Worse than both v5 and v1 across all conditions (~1–2pp worse than v1).** The SE blocks add fresh-initialized parameters that need multiple epochs to converge, but the model only trains usefully for 2 epochs (best at epoch 1). The combination of new SE weights + new OC-Softmax output layer + new OC-Softmax center is too many uninitialized components to learn simultaneously from 2019 pre-trained weights. The 42% relative improvement reported by Ma & Liang was on ASVspoof 2019 with BCE loss and longer training — different regime.
 
-**Conclusion:** OC-Softmax v1 (no SE) remains the best model. SE attention may help with BCE loss (where the model trains for fewer fresh parameters) or with a longer training curriculum, but does not stack well with OC-Softmax under the current training regime.
+**Conclusion:** SE attention may help with BCE loss (fewer fresh parameters) or with a longer training curriculum, but does not stack well with OC-Softmax under the current training regime.
 
----
+## Frequency Feature Masking + OC-Softmax (abandoned, experimental add-on)
 
-## Priority 8: Frequency Feature Masking (FFM) + OC-Softmax — Worse
-
-Applied frequency feature masking ([Kwak et al., ADD 2022](https://ikwak2.github.io/publications/ddam004-kwak.pdf)) to LFCC spectrograms during training. Randomly masks frequency bands (low, high, or random contiguous band) to force the model to learn spoofing cues from all frequency regions instead of relying on specific bands. Motivated by GradCAM finding that noise masks the Delta-delta hotspots the model relies on. Combined with OC-Softmax + noise augmentation. No new parameters — pure data augmentation.
+Tested stacking frequency feature masking (FFM) ([Kwak et al., ADD 2022](https://ikwak2.github.io/publications/ddam004-kwak.pdf)) on top of the adopted OC-Softmax v1 configuration. Randomly masks frequency bands (low, high, or random contiguous band) during training to force the model to learn spoofing cues from all frequency regions instead of relying on specific bands. Motivated by GradCAM finding that noise masks the Delta-delta hotspots the model relies on. No new parameters — pure data augmentation.
 
 ### Training
 
@@ -512,4 +521,4 @@ Applied frequency feature masking ([Kwak et al., ADD 2022](https://ikwak2.github
 
 **Worse than v1 across nearly all conditions, especially noise (+2–3pp).** Masking 10 of 60 LFCC bins (~17%) during training is too aggressive — it destroys critical spectral information that the model needs to learn spoofing cues, particularly in the Delta-delta bands that are already vulnerable to noise. The frequency masking compounds with noise augmentation to create excessively degraded training inputs. Short clip and codec conditions are nearly unchanged, confirming the damage is concentrated in the frequency domain.
 
-**Conclusion:** FFM does not stack well with noise augmentation + OC-Softmax. The noise augmentation already forces robustness to frequency-domain corruption; additional frequency masking is redundant and destructive. OC-Softmax v1 remains the best model overall.
+**Conclusion:** FFM does not stack well with noise augmentation + OC-Softmax. The noise augmentation already forces robustness to frequency-domain corruption; additional frequency masking is redundant and destructive.
