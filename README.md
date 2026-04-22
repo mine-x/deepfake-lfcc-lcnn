@@ -1,4 +1,4 @@
-# Audio Deepfake Detection for Voice-Based Social Engineering
+# Voice Deepfake Detection for Enterprise Security
 **Georgia Tech CS 6727 Practicum — Mina Xu**
 
 This project extends the LFCC-LCNN baseline (ASVspoof 2021 DF track) into a robustness-oriented deepfake detection framework, evaluated on the **ASVspoof5 (2024)** dataset. The goal is to produce actionable security signals for detecting vishing (voice-based social engineering) attacks in enterprise environments.
@@ -172,14 +172,14 @@ Saliency analysis (GradCAM) shows that noise hides the subtle timing patterns th
 - **Training noise:** `noise_clips/train/` — 3 ambient (MUSAN) + 3 babble (Freesound). Use `--noise-subdir train`.
 - **Eval noise:** `noise_clips/eval_train_combined/` — all 12 clips combined for most representative estimate.
 
-**Iterative approach:** Across v1–v5, we tested noise clip complexity, learning rate, regularization, warmup, curriculum, and label smoothing. Full comparison table and per-version details in `enhancement_iterations.md`.
+**Iterative approach:** Across v1–v5, we tested noise clip complexity, learning rate, regularization, warmup, curriculum, and label smoothing. Full comparison table and per-version details in `ENHANCEMENT_ITERATIONS.md`.
 
 
 ### Priority 2: Weighted Loss Function — Abandoned
 
 **Target:** Training data imbalance (8.7x more fake samples than real)
 
-Tested giving more weight to real-audio errors during training (pos_weight=2.0). Result: **worse than the noise-augmented model across all conditions** (+1.2–3.6pp). Noise augmentation had already shifted the model's bias from letting fakes through to occasionally rejecting real calls — extra weighting pushed this too far. Full results in `enhancement_iterations.md`.
+Tested giving more weight to real-audio errors during training (pos_weight=2.0). Result: **worse than the noise-augmented model across all conditions** (+1.2–3.6pp). Noise augmentation had already shifted the model's bias from letting fakes through to occasionally rejecting real calls — extra weighting pushed this too far. Full results in `ENHANCEMENT_ITERATIONS.md`.
 
 ### Priority 3: Score Calibration / Condition-Aware Thresholds — Minimal Gain
 
@@ -267,7 +267,7 @@ Applies random frequency filters during training to simulate the distortion patt
 
 ### Weighted Loss — Abandoned
 
-Tested weighted BCELoss (pos_weight=2.0) on top of the noise-augmented model to address 1:8.7 bonafide:spoof class imbalance. **Worse across all conditions (+1.2–3.6pp).** Noise augmentation already reversed spoof collapse to bonafide collapse; upweighting bonafide loss amplified this further. Full per-condition comparison in `enhancement_iterations.md`.
+Tested weighted BCELoss (pos_weight=2.0) on top of the noise-augmented model to address 1:8.7 bonafide:spoof class imbalance. **Worse across all conditions (+1.2–3.6pp).** Noise augmentation already reversed spoof collapse to bonafide collapse; upweighting bonafide loss amplified this further. Full per-condition comparison in `ENHANCEMENT_ITERATIONS.md`.
 
 ### Score Calibration (Z-Normalization) — Minimal Gain
 
@@ -282,7 +282,7 @@ Per-condition Z-normalization (`z = (score - pooled_mean) / pooled_std`) applied
 
 ### Mixup Augmentation — Abandoned
 
-LFCC-level mixup (α=0.2) on top of noise-augmented model settings. **Worse across all conditions (+2–3pp).** Blending audio features together creates unrealistic training inputs that hurt detection accuracy on real data despite appearing to improve on the dev set. Full results in `enhancement_iterations.md`.
+LFCC-level mixup (α=0.2) on top of noise-augmented model settings. **Worse across all conditions (+2–3pp).** Blending audio features together creates unrealistic training inputs that hurt detection accuracy on real data despite appearing to improve on the dev set. Full results in `ENHANCEMENT_ITERATIONS.md`.
 
 ### OC-Softmax Loss
 
@@ -472,7 +472,7 @@ The upstream LFCC-LCNN framework under `core_modules/` and `core_scripts/` is th
 
 **Analysis & Documentation:**
 - This `PROJECT.md`
-- `enhancement_iterations.md` — per-iteration training experiment tracking
+- `ENHANCEMENT_ITERATIONS.md` — per-iteration training experiment tracking
 - `04_completed_evals/ocsoftmax_v1/saliency_maps/README.md` — cross-model GradCAM analysis (baseline, noise-augmented, OC-Softmax)
 - `04_completed_evals/clean_weighted/saliency_maps/README.md` — baseline-only saliency map viewer guide
 - `04_completed_evals/risk_threshold_analysis.md` — risk tier trade-off analysis
