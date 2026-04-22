@@ -32,7 +32,7 @@ The original baseline was designed for ASVspoof 2021, which has a different prot
 - **Codec evaluation script** (`01_project/baseline_DF/03_eval_codec.sh`): Adapted evaluation script for codec-augmented eval sets
   - Auto-generates `.lst` file from the codec directory and uses `config_auto.py` so `config.py` stays untouched
   - Runs inference, extracts scores, and cleans up intermediate files
-  - Usage: `bash 03_03_eval_codec.sh <codec_dir> <condition_name> [trained_model]`
+  - Usage: `bash 03_eval_codec.sh <codec_dir> <condition_name> [trained_model]`
 - **Failure analysis** (`02_evaluation_scripts/failure_analysis.py`): Computes per-condition FAR/FRR at a fixed reference threshold, classifies dominant failure modes (spoof collapse vs bonafide collapse), and reports score distribution statistics (mean, std) per group
   - Auto-discovers `scores_*.txt` files in a directory and compares all conditions against the clean baseline
   - Outputs a summary table to stdout and optionally saves to CSV
@@ -71,7 +71,7 @@ Early stopping after 4 epochs (3 consecutive non-improvements). Best model = epo
 
 ## Baseline Results
 
-Reference point: In the ASVspoof 2021 challenge (deepfake track), LFCC-LCNN achieved **23.48%** EER as an organizer-provided baseline (B03) on the 2021 eval set ([source](https://pmc.ncbi.nlm.nih.gov/articles/PMC11991371/#sensors-25-01989-t003), [challenge paper](https://arxiv.org/abs/2210.02437)).
+Reference point: In the ASVspoof 2021 challenge (deepfake track), LFCC-LCNN achieved **23.48%** EER as an organizer-provided baseline (B03) on the 2021 eval set ([Yamagishi et al., ASVspoof 2021 challenge summary](https://arxiv.org/abs/2210.02437)).
 
 ### Clean Evaluation
 
@@ -100,19 +100,19 @@ Reference point: In the ASVspoof 2021 challenge (deepfake track), LFCC-LCNN achi
 
 FAR and FRR computed at the clean baseline's EER threshold (**1.2149**) as a fixed reference point. This reveals how each distortion shifts the score distributions relative to where the model was calibrated on clean data.
 
-| Condition | EER | ΔEER | RI | FAR† | FRR† | Failure Mode | Bonafide Mean | Bonafide Std | Spoof Mean | Spoof Std |
-|-----------|-----|------|----|------|------|--------------|---------------|--------------|------------|-----------|
-| Clean | 38.72% | — | — | 38.72% | 38.72% | balanced | 2.17 | 3.85 | -1.63 | 6.98 |
-| Noise: ambient 20dB | 44.11% | +5.39 | -0.139 | 47.33% | 40.15% | spoof collapse | 2.36 | 4.50 | 0.15 | 6.14 |
-| Noise: ambient 10dB | 47.98% | +9.26 | -0.239 | 55.73% | 39.37% | spoof collapse | 2.61 | 4.89 | 1.45 | 5.77 |
-| Noise: babble 20dB | 43.21% | +4.49 | -0.116 | 57.34% | 26.63% | spoof collapse | 3.04 | 3.31 | 1.29 | 4.71 |
-| Noise: babble 10dB | 46.60% | +7.88 | -0.203 | **78.73%** | 14.35% | spoof collapse | 3.92 | 2.83 | 3.29 | 3.44 |
-| Short clip: 5s* | 38.36% | -0.36 | +0.009 | 33.01% | 46.51% | bonafide collapse | 1.35 | 5.49 | -4.06 | 9.43 |
-| Short clip: 3s* | 39.09% | +0.37 | -0.010 | 32.86% | **47.88%** | bonafide collapse | 1.11 | **6.41** | -4.39 | **10.09** |
-| Codec: MP3 64kbps | 38.88% | +0.16 | -0.004 | 36.18% | 43.36% | bonafide collapse | 1.73 | 4.03 | -2.19 | 7.27 |
-| Codec: Opus 32kbps | 38.36% | -0.36 | +0.009 | 37.24% | 40.12% | balanced | 2.06 | 3.95 | -1.86 | 7.01 |
+| Condition | EER | ΔEER | FAR† | FRR† | Failure Mode | Bonafide Mean | Bonafide Std | Spoof Mean | Spoof Std |
+|-----------|-----|------|------|------|--------------|---------------|--------------|------------|-----------|
+| Clean | 38.72% | — | 38.72% | 38.72% | balanced | 2.17 | 3.85 | -1.63 | 6.98 |
+| Noise: ambient 20dB | 44.11% | +5.39 | 47.33% | 40.15% | spoof collapse | 2.36 | 4.50 | 0.15 | 6.14 |
+| Noise: ambient 10dB | 47.98% | +9.26 | 55.73% | 39.37% | spoof collapse | 2.61 | 4.89 | 1.45 | 5.77 |
+| Noise: babble 20dB | 43.21% | +4.49 | 57.34% | 26.63% | spoof collapse | 3.04 | 3.31 | 1.29 | 4.71 |
+| Noise: babble 10dB | 46.60% | +7.88 | **78.73%** | 14.35% | spoof collapse | 3.92 | 2.83 | 3.29 | 3.44 |
+| Short clip: 5s* | 38.36% | -0.36 | 33.01% | 46.51% | bonafide collapse | 1.35 | 5.49 | -4.06 | 9.43 |
+| Short clip: 3s* | 39.09% | +0.37 | 32.86% | **47.88%** | bonafide collapse | 1.11 | **6.41** | -4.39 | **10.09** |
+| Codec: MP3 64kbps | 38.88% | +0.16 | 36.18% | 43.36% | bonafide collapse | 1.73 | 4.03 | -2.19 | 7.27 |
+| Codec: Opus 32kbps | 38.36% | -0.36 | 37.24% | 40.12% | balanced | 2.06 | 3.95 | -1.86 | 7.01 |
 
-RI = Robustness Index = `1 − (EER_perturbed / EER_clean)`. † FAR/FRR at the clean baseline's EER threshold (fixed reference).
+† FAR/FRR at the clean baseline's EER threshold (fixed reference).
 
 \*Short clip conditions center-crop files longer than the target duration; files already shorter are scored at their original length. Max 5s: 570k truncated, 110k as-is. Max 3s: 679k truncated, 2k as-is.
 
@@ -120,11 +120,11 @@ RI = Robustness Index = `1 − (EER_perturbed / EER_clean)`. † FAR/FRR at the 
 
 Individual distortions are tested in isolation above, but real telephony and VoIP channels present multiple distortions simultaneously. The following combinations simulate realistic deployment scenarios using 20dB SNR (representative of typical office/VoIP quality):
 
-| Combined Conditions | EER | ΔEER | RI | FAR† | FRR† | Failure Mode | Bonafide Mean | Bonafide Std | Spoof Mean | Spoof Std |
-|-----------|-----|------|----|------|------|--------------|---------------|--------------|------------|-----------|
-| Noise + Codec (babble 20dB + MP3) | 43.53% | +4.81 | -0.124 | 55.25% | 29.45% | spoof collapse | 2.80 | 3.44 | 1.04 | 4.89 |
-| Noise + Short clip (babble 20dB + 3s) | 43.39% | +4.67 | -0.121 | 46.47% | 39.95% | spoof collapse | 2.02 | 5.45 | -0.48 | 6.98 |
-| Codec + Short clip (MP3 + 3s) | 39.25% | +0.53 | -0.014 | 31.36% | 50.42% | bonafide collapse | 0.71 | 6.50 | -4.80 | 10.15 |
+| Combined Conditions | EER | ΔEER | FAR† | FRR† | Failure Mode | Bonafide Mean | Bonafide Std | Spoof Mean | Spoof Std |
+|-----------|-----|------|------|------|--------------|---------------|--------------|------------|-----------|
+| Noise + Codec (babble 20dB + MP3) | 43.53% | +4.81 | 55.25% | 29.45% | spoof collapse | 2.80 | 3.44 | 1.04 | 4.89 |
+| Noise + Short clip (babble 20dB + 3s) | 43.39% | +4.67 | 46.47% | 39.95% | spoof collapse | 2.02 | 5.45 | -0.48 | 6.98 |
+| Codec + Short clip (MP3 + 3s) | 39.25% | +0.53 | 31.36% | 50.42% | bonafide collapse | 0.71 | 6.50 | -4.80 | 10.15 |
 
 **Dominant failure modes:**
 
@@ -195,7 +195,7 @@ Tested giving more weight to real-audio errors during training (pos_weight=2.0).
 
 **Target:** Overfitting — all noise-augmented iterations overfit within 1 epoch (best model always epoch 0 or 1)
 
-Mixup blends pairs of training samples together (e.g., 70% of sample A + 30% of sample B), forcing the model to handle ambiguous inputs rather than memorizing individual examples. STC (Speech Technology Center) credited mixup as critical for their ASVspoof 2021 system, achieving 23.48% → 15.64% EER on the DF track using mixup + codec simulation ([Tomilov et al., ASVspoof 2021 Workshop](https://www.isca-archive.org/asvspoof_2021/tomilov21_asvspoof.pdf)).
+Mixup blends pairs of training samples together (e.g., 70% of sample A + 30% of sample B), forcing the model to handle ambiguous inputs rather than memorizing individual examples. STC (Speech Technology Center) credited mixup as critical for their ASVspoof 2021 system, which reached 15.64% EER on the DF track using mixup plus codec simulation, a significant improvement over the 23.48% organizer-provided baseline ([Tomilov et al., ASVspoof 2021 Workshop](https://www.isca-archive.org/asvspoof_2021/tomilov21_asvspoof.pdf)).
 
 - Applied at the LFCC feature level during training, no architecture change
 - Controlled by `--mixup-alpha` (blending intensity; α=0.2 is standard)
@@ -211,15 +211,11 @@ The current BCELoss treats spoofing detection as symmetric binary classification
 - Same model architecture, only the loss function and output layer change
 - Reference implementation: `yzyouzhang/AIR-ASVspoof` on GitHub
 
-### Priority 6: FIR Codec Simulation in Training
+### Priority 6: FIR Codec Simulation in Training — Not Pursued
 
 **Target:** Codec-induced distortions and channel variability
 
-Applies random frequency filters during training to simulate the distortion patterns of various audio codecs (MP3, Opus, AMR, telephony). Unlike eval-time codec augmentation (which only tests robustness), this teaches the model to ignore codec effects during detection. STC found FIR augmentation + mixup together always outperformed either alone ([Tomilov et al., ASVspoof 2021 Workshop](https://www.isca-archive.org/asvspoof_2021/tomilov21_asvspoof.pdf)).
-
-- Applied to audio before feature extraction, complementary to noise augmentation
-- Bank of random filters simulating typical telephony/VoIP frequency responses
-- No architecture change
+Applies random frequency filters during training to simulate the distortion patterns of various audio codecs (MP3, Opus, AMR, telephony). Not implemented because eval-time codec conditions showed negligible impact on the baseline (ΔEER < 0.4pp for MP3 64kbps and Opus 32kbps), so training-time codec simulation was deprioritized. Worth revisiting if lower-bitrate or telephony-specific codecs are introduced.
 
 ---
 
@@ -262,7 +258,7 @@ Applies random frequency filters during training to simulate the distortion patt
 - **Failure mode reversed under noise.** Baseline let fake audio through (spoof collapse). Now the model errs toward rejecting real audio instead (bonafide collapse). In a security context, this is preferable — false rejections are recoverable, false acceptances are not.
 - **Babble 10dB still hardest** but FAR dropped from 79% to 43%. At this noise level speech and noise are nearly equal in power, a fundamental limit for frequency-based detection.
 - **Score distributions shifted down.** Both bonafide and spoof means moved negative while maintaining similar separation, reflected in the EER threshold shifting from +1.21 to -2.32.
-- **Short clips still have wide score spread.** Noise augmentation doesn't help here — this is an insufficient temporal context problem, addressable via score calibration (Priority 3).
+- **Short clips still have wide score spread.** Noise augmentation doesn't help here — this is an insufficient temporal context problem. Score calibration was tested separately (Priority 3) but did not meaningfully reduce the spread.
 - **Combined conditions show no new failure modes.** Distortions compound additively, not synergistically.
 
 ### Weighted Loss — Abandoned
@@ -278,21 +274,21 @@ Per-condition Z-normalization (`z = (score - pooled_mean) / pooled_std`) applied
 | Mixed EER (all 12 conditions pooled) | 39.09% | **38.97%** |
 | Per-condition EER | unchanged | unchanged (Z-norm preserves score ordering) |
 
-**Improvement: +0.12pp.** The noise-augmented model already produces well-aligned score distributions across conditions, leaving negligible headroom for post-processing calibration. Automatic condition detection (e.g., SNR estimation) not implemented — the best-case ceiling was too low to justify. A per-condition threshold table can be regenerated via `calibrate_scores.py` for operational use.
+**Improvement: +0.12pp.** The noise-augmented model already produces well-aligned score distributions across conditions, leaving negligible headroom for post-processing calibration. Automatic condition detection (e.g., SNR estimation) was not implemented: the best-case ceiling was too low to justify. A per-condition threshold table can be regenerated via `calibrate_scores.py` for operational use.
 
 ### Mixup Augmentation — Abandoned
 
 LFCC-level mixup (α=0.2) on top of noise-augmented model settings. **Worse across all conditions (+2–3pp).** Blending audio features together creates unrealistic training inputs that hurt detection accuracy on real data despite appearing to improve on the dev set. Full results in `ENHANCEMENT_ITERATIONS.md`.
 
-### OC-Softmax Loss
+### Enhanced Model (OC-Softmax + Noise Augmentation)
 
-Replaced BCELoss with OC-Softmax ([Zhang et al., IEEE SPL 2021](https://arxiv.org/pdf/2010.13995)). Instead of binary classification, the model learns a compact bonafide boundary — novel attacks fail because they don't match bonafide, not because they match known spoof. Uses the same noise augmentation pipeline as the noise-augmented model (50% of training samples receive ambient/babble noise at 10–25dB SNR). Output changed from a single score to a 64-dimensional embedding compared against a learned bonafide center via cosine similarity.
+OC-Softmax loss (Priority 5) layered on top of the v5 noise-augmented training pipeline. See Priority 5 above for the loss function rationale.
 
-- **Training:** From 2019 LA pre-trained weights, LR 0.0003, warmup 1000 steps, noise augmentation (same as noise-augmented model), emb_dim=64, r_real=0.9, r_fake=0.2, alpha=20.0
+- **Training:** From 2019 LA pre-trained weights, LR 0.0003, warmup 1000 steps, 50% noise augmentation (ambient/babble, SNR 10–25dB), emb_dim=64, r_real=0.9, r_fake=0.2, alpha=20.0
 - **Best model:** epoch 4 — first model to improve past epoch 0
 - **Training script:** `08_train_ocsoftmax.sh`
 
-| Condition | Baseline EER | Noise-Aug EER | OC-Softmax EER | Δ vs Noise-Aug |
+| Condition | Baseline EER | Noise-Aug EER | Enhanced EER | Δ vs Noise-Aug |
 |-----------|-------------|-------------------|---------------|---------|
 | Clean | 38.72% | 37.99% | 38.03% | +0.04pp |
 | Noise: ambient 20dB | 44.11% | 39.30% | **38.30%** | **-1.00pp** |
@@ -344,7 +340,6 @@ FAR/FRR at OC-Softmax clean EER threshold (0.9095, cosine similarity scale):
 
 - **EER** (Equal Error Rate) — the threshold where FAR equals FRR. Lower is better. Primary metric for detection performance.
 - **ΔEER** — difference between a distorted condition's EER and clean baseline EER. Shows how much a distortion degrades performance.
-- **Robustness Index** — `1 − (EER_perturbed / EER_clean)`. Positive = more robust than baseline, negative = degraded. Zero = no change.
 - **FAR** (False Acceptance Rate) — fraction of spoof samples incorrectly accepted as bonafide (scored above the threshold). High FAR = the model is letting fake audio through.
 - **FRR** (False Rejection Rate) — fraction of bonafide samples incorrectly rejected as spoof (scored below the threshold). High FRR = the model is blocking real audio.
 - **Failure Mode** — when FAR and FRR are computed at a fixed threshold, the dominant direction reveals the type of failure: "spoof collapse" (FAR >> FRR, fake audio passes as real) or "bonafide collapse" (FRR >> FAR, real audio rejected as fake).
@@ -373,7 +368,7 @@ The system operates as a **deepfake tripwire** — it flags likely deepfakes for
 
 Thresholds are derived empirically from precision/detection rate analysis on the ASVspoof5 eval set (680,774 trials). Each tier boundary is set at the score where the corresponding precision target is met. The trade-off is remarkably linear — each 1% of precision costs about 3-4% of detection rate, with no natural elbow.
 
-**OC-Softmax Model (recommended):**
+**Enhanced Model (recommended):**
 
 | Tier | Threshold | Precision | Detection Rate | FPR | False Alarms / 1K calls |
 |------|-----------|-----------|----------------|-----|------------------------|
@@ -402,11 +397,11 @@ At ~38% EER with a 1:3.9 bonafide:spoof ratio in the eval set, the bonafide and 
 
 ## Final Enhanced Model
 
-**OC-Softmax** is selected for enterprise deployment over the noise-augmented model based on robustness, score geometry, and operational simplicity.
+The **enhanced model** (OC-Softmax loss layered on top of the v5 noise-augmented training pipeline) is selected for enterprise deployment over the noise-augmented model alone, based on robustness, score geometry, and operational simplicity.
 
-### Head-to-Head: OC-Softmax vs Noise-Augmented
+### Head-to-Head: Enhanced vs Noise-Augmented
 
-| Metric | OC-Softmax | Noise-Augmented |
+| Metric | Enhanced | Noise-Augmented |
 |--------|---------------|--------------|
 | Clean EER | 38.03% | 37.99% |
 | Score range | [-1, +1] (bounded cosine) | ~[-15, +10] (unbounded logit) |
@@ -415,19 +410,19 @@ At ~38% EER with a 1:3.9 bonafide:spoof ratio in the eval set, the bonafide and 
 
 ### Robustness Comparison (ΔEER from clean baseline)
 
-| Condition | OC ΔEER | NA ΔEER | Winner |
+| Condition | Enhanced ΔEER | NA ΔEER | Winner |
 |-----------|---------|---------|--------|
-| noise_ambient_10dB | +2.95 | +4.13 | OC |
-| noise_ambient_20dB | +0.27 | +1.31 | OC |
+| noise_ambient_10dB | +2.95 | +4.13 | Enhanced |
+| noise_ambient_20dB | +0.27 | +1.31 | Enhanced |
 | noise_babble_10dB | +3.33 | +2.11 | NA |
-| noise_babble_20dB | +0.20 | +0.66 | OC |
-| mp3+babble_20dB | +0.26 | +0.93 | OC |
-| babble_20dB+short_3s | +1.43 | +1.76 | OC |
+| noise_babble_20dB | +0.20 | +0.66 | Enhanced |
+| mp3+babble_20dB | +0.26 | +0.93 | Enhanced |
+| babble_20dB+short_3s | +1.43 | +1.76 | Enhanced |
 | Codecs / short clips | ~tied | ~tied | — |
 
-OC-Softmax wins 5 conditions (especially ambient noise — the dominant enterprise telephony degradation), Noise-Aug wins 1 (babble 10dB), 6 tied.
+The enhanced model wins 5 conditions (especially ambient noise — the dominant enterprise telephony degradation), noise-augmented alone wins 1 (babble 10dB), 6 tied.
 
-### Why OC-Softmax for Enterprise
+### Why the Enhanced Model for Enterprise
 
 | Factor | Assessment |
 |--------|------------|
@@ -437,7 +432,7 @@ OC-Softmax wins 5 conditions (especially ambient noise — the dominant enterpri
 | **Bonafide cluster tightness** | Real calls cluster tightly (std 0.334 vs 3.448), so fewer end up in the uncertain zone between tiers |
 | **Ambient noise robustness** | 1.2pp less degradation under ambient noise — the most common distortion in enterprise calls |
 
-The only scenario favoring Noise-Aug is heavy multi-speaker background noise (call centers, trading floors), where its ΔEER advantage is 1.2pp. For general enterprise telephony, OC-Softmax provides better robustness with simpler deployment.
+The only scenario favoring noise-augmented alone is heavy multi-speaker background noise (call centers, trading floors), where its ΔEER advantage is 1.2pp. For general enterprise telephony, the enhanced model provides better robustness with simpler deployment.
 
 ---
 
@@ -471,7 +466,7 @@ The upstream LFCC-LCNN framework under `core_modules/` and `core_scripts/` is th
 - Training and evaluation shell scripts: `01_project/baseline_DF/01_train.sh` through `08_train_ocsoftmax.sh`
 
 **Analysis & Documentation:**
-- This `PROJECT.md`
+- This `README.md` — project overview, ASVspoof5 adaptations, enhancement results, and operational framework
 - `ENHANCEMENT_ITERATIONS.md` — per-iteration training experiment tracking
 - `04_completed_evals/ocsoftmax_v1/saliency_maps/README.md` — cross-model GradCAM analysis (baseline, noise-augmented, OC-Softmax)
 - `04_completed_evals/clean_weighted/saliency_maps/README.md` — baseline-only saliency map viewer guide
